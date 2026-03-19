@@ -1,0 +1,43 @@
+.Panel {
+  width: 380px; /* 조금 더 넓게 */
+  height: 100%; /* 부모 높이에 맞춤 */
+  background: linear-gradient(
+    145deg,
+    #2c3e50,
+    #1a252f
+  ); /* 그라데이션으로 입체감 */
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  border: 1px solid #3d4e5f;
+}
+
+/* 상단바 (종료 버튼 등) */
+.topBar {
+  display: flex;
+  justify-content: space-between; /* 양 끝 정렬 */
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topButton {
+  background: #c0392b; /* 종료 버튼은 붉은색 계열 */
+  border: none;
+  color: white;
+  padding: 6px 15px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.topButton:hover {
+  background: #e74c3c;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}

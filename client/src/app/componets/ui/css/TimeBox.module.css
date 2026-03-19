@@ -1,0 +1,38 @@
+/* 전체 컨테이너 */
+.infoContainer {
+  background-color: #1e272e; /* 사진보다 조금 더 어두운 배경 (선택사항) */
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* 행 사이 간격 */
+  margin-top: 10px;
+}
+
+/* 각 줄 (사용시간, 남은시간 등) */
+.row {
+  display: flex;
+  justify-content: space-between; /* 양 끝으로 밀기 */
+  align-items: center;
+  font-size: 14px;
+  color: #bdc3c7; /* 기본 글자색 (연회색) */
+}
+
+/* 오른쪽 값(Value) 스타일 */
+.value {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* '남은시간' 강조용 스타일 */
+.blueText {
+  color: #00d2ff; /* 하늘색 강조 */
+  font-weight: bold;
+}
+
+.blueValue {
+  color: #00d2ff;
+  font-size: 18px; /* 시간은 조금 더 크게 */
+  font-weight: 800;
+  letter-spacing: 1px; /* 숫자 간격 살짝 벌리기 */
+}

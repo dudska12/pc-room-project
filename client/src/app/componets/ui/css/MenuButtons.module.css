@@ -1,0 +1,60 @@
+.menuButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2열 배치 */
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.menuBtn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 90px;
+
+  /* 배경: 어두운 그라데이션 */
+  background: linear-gradient(145deg, #34495e, #2c3e50);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+
+  color: #ecf0f1;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* 입체감 있는 그림자 */
+  box-shadow:
+    4px 4px 10px rgba(0, 0, 0, 0.3),
+    -2px -2px 8px rgba(255, 255, 255, 0.02);
+}
+
+/* 아이콘 스타일 */
+.icon {
+  font-size: 24px;
+  transition: transform 0.3s;
+}
+
+/* 마우스를 올렸을 때 (Hover) */
+.menuBtn:hover {
+  transform: translateY(-5px); /* 살짝 들림 */
+  border-color: #00d2ff; /* 포인트 컬러 */
+  color: #00d2ff;
+
+  /* 네온 발광 효과 */
+  box-shadow:
+    0 0 15px rgba(0, 210, 255, 0.4),
+    inset 0 0 5px rgba(0, 210, 255, 0.2);
+}
+
+.menuBtn:hover .icon {
+  transform: scale(1.2); /* 아이콘만 살짝 커짐 */
+}
+
+/* 클릭했을 때 (Active) */
+.menuBtn:active {
+  transform: translateY(0);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.5);
+}

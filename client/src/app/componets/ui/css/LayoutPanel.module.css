@@ -1,0 +1,22 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background: #0a0a0a; /* 더 깊은 블랙 */
+  overflow: hidden;
+  padding: 10px; /* 외곽에 살짝 여백을 줘서 윈도우 느낌 */
+  gap: 10px;
+}
+
+.main {
+  flex: 1;
+  background: #151515;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  font-size: 2rem;
+  font-weight: bold;
+  border: 1px solid #222;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+}
