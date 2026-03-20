@@ -2,6 +2,7 @@
 import { useState } from "react";
 import style from "./css/FoodModal.module.css"; // 기존 스타일 유지
 import { useTimeStore } from "@/store/useTimeStore"; // 시간 스토어 가져오기
+import ConfirmModal from "./ConfirmModal";
 
 type Props = {
   onClose: () => void;
@@ -21,6 +22,17 @@ export default function ChargeModal({ onClose }: Props) {
   const [selected, setSelected] = useState<(typeof chargeOptions)[0] | null>(
     null,
   );
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false); // 3. 확인창 상태
+
+  // 최종 충전 승인 함수
+  const handleFinalCharge = () => {
+    if (selected) {
+      // addTime(selected.seconds); // 스토어에 시간 추가 로직 (있을 경우)
+      alert(`${selected.time} 충전이 완료되었습니다!`);
+      setIsConfirmOpen(false);
+      onClose(); // 충전 후 모달 닫기
+    }
+  };
 
   return (
     <div className={style.modalOverlay} onClick={onClose}>
@@ -101,11 +113,22 @@ export default function ChargeModal({ onClose }: Props) {
                 {selected ? selected.price.toLocaleString() : 0}원
               </span>
             </div>
-            <button className={style.orderBtn} disabled={!selected}>
+            <button
+              className={style.orderBtn}
+              disabled={!selected}
+              onClick={() => setIsConfirmOpen(true)}
+            >
               충전하기
             </button>
           </div>
         </aside>
+
+        <ConfirmModal
+          isOpen={isConfirmOpen}
+          totalPrice={selected?.price || 0}
+          onConfirm={handleFinalCharge}
+          onCancel={() => setIsConfirmOpen(false)}
+        />
       </div>
     </div>
   );

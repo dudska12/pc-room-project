@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import style from "./css/FoodModal.module.css";
+import ConfirmModal from "./ConfirmModal";
+import { useOrder } from "@/app/hooks/useOrder";
 
 const CATEGORIES = ["추천메뉴", "식사류", "라면류", "간식류", "음료", "커피"];
 
@@ -14,6 +16,8 @@ interface CartItem {
 export default function FoodModal({ onClose }: { onClose: () => void }) {
   const [activeCategory, setActiveCategory] = useState("추천메뉴");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const { sendOrder, isLoading } = useOrder();
 
   // 1. 장바구니 추가
   const addToCart = (id: string, name: string, price: number) => {
@@ -49,6 +53,23 @@ export default function FoodModal({ onClose }: { onClose: () => void }) {
     (sum, item) => sum + item.price * item.count,
     0,
   );
+
+  const handleFinalConfirm = async () => {
+    // 3. 훅 사용 (코드가 단 한 줄로 깔끔해집니다)
+    const result = await sendOrder({
+      items: cart,
+      totalPrice: totalAmount,
+      tableNumber: "3번 자리",
+    });
+
+    if (result.success) {
+      alert("주문이 완료되었습니다!");
+      setCart([]);
+      setIsConfirmOpen(false);
+    } else {
+      alert("오류가 발생했습니다. 다시 시도해주세요.");
+    }
+  };
 
   return (
     <div className={style.modalOverlay}>
@@ -142,12 +163,19 @@ export default function FoodModal({ onClose }: { onClose: () => void }) {
             <button
               className={style.orderBtn}
               disabled={cart.length === 0}
-              onClick={() => alert("주문이 완료되었습니다!")}
+              onClick={() => setIsConfirmOpen(true)} // 3. 클릭 시 확인창 열기
             >
               주문하기
             </button>
           </div>
         </aside>
+
+        <ConfirmModal
+          isOpen={isConfirmOpen}
+          totalPrice={totalAmount}
+          onConfirm={handleFinalConfirm}
+          onCancel={() => setIsConfirmOpen(false)}
+        />
       </div>
     </div>
   );
