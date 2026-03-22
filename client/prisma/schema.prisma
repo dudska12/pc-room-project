@@ -11,3 +11,105 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// 1. 사용자 (User) - 회원 정보 및 잔여 시간 관리
+model User {
+  id            String   @id @default(uuid())
+  userId        String   @unique // 로그인 아이디
+  password      String
+  name          String
+  phone         String? // 연락처 (선택)
+  remainingTime Int      @default(0) // 남은 시간 (분 단위)
+  point         Int      @default(0) // 보유 포인트
+  role          Role     @default(USER) // USER 또는 ADMIN
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 관계 설정
+  logs   UsageLog[]
+  orders Order[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// 2. 좌석 (Seat) - 실시간 PC 상태 및 사용 정보
+model Seat {
+  id            Int        @id @default(autoincrement())
+  seatNumber    Int        @unique
+  status        SeatStatus @default(AVAILABLE)
+  currentUserId String? // 현재 사용 중인 유저 ID (필요 시 관계 설정 가능)
+  startTime     DateTime? // 사용 시작 시각
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+enum SeatStatus {
+  AVAILABLE // 사용 가능
+  OCCUPIED // 사용 중
+  REPAIR // 수리 중
+  RESERVED // 예약됨
+}
+
+// 3. 상품 (Product) - 먹거리 및 서비스 관리 (재고/설명 포함)
+model Product {
+  id       Int    @id @default(autoincrement())
+  name     String // 상품명 (예: 신라면)
+  category String // 카테고리 (라면, 음료, 과자, 요금제)
+  price    Int    @default(0)
+
+  // 상세 정보
+  description String? @db.Text // 상품 상세 설명
+  stock       Int     @default(0) // 현재 재고 수량
+  imageUrl    String? // 이미지 주소 (Supabase Storage URL)
+  isAvailable Boolean @default(true) // 판매 가능 여부
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계 설정
+  orderItems OrderItem[]
+}
+
+// 4. 주문 (Order) - 사용자의 상품 주문 내역
+model Order {
+  id         Int         @id @default(autoincrement())
+  user       User        @relation(fields: [userId], references: [id])
+  userId     String
+  seatNumber Int // 주문한 좌석 번호
+  totalPrice Int // 총 주문 금액
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+
+  items OrderItem[]
+}
+
+enum OrderStatus {
+  PENDING // 주문 확인 중
+  COOKING // 조리 중
+  COMPLETED // 완료(서빙됨)
+  CANCELLED // 취소됨
+}
+
+// 5. 주문 상세 (OrderItem) - 하나의 주문에 담긴 여러 상품들
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  order     Order   @relation(fields: [orderId], references: [id])
+  orderId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int // 주문 수량
+}
+
+// 6. 이용 기록 (UsageLog) - 유저별 PC 사용 히스토리
+model UsageLog {
+  id         Int       @id @default(autoincrement())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  seatNumber Int
+  startTime  DateTime  @default(now())
+  endTime    DateTime?
+  usedTime   Int? // 실제 사용한 시간(분)
+}
