@@ -1,62 +1,107 @@
-// app/signup/page.tsx
 "use client";
 
 import { signup } from "@/app/actions/auth";
 import { useState } from "react";
+import styles from "./signup.module.css"; // CSS Module 연결
 
-export default function SignupPage() {
+interface SignupPageProps {
+  onCancel?: () => void; // 부모(Login)에서 모달을 닫기 위해 내려주는 함수
+}
+
+export default function SignupPage({ onCancel }: SignupPageProps) {
   const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
 
   async function handleSubmit(formData: FormData) {
-    const result = await signup(formData);
-    if (result?.error) {
-      setError(result.error);
-    } else {
-      alert("회원가입 성공! 로그인해 주세요.");
-      // 성공 후 로그인 페이지로 이동하거나 로직 처리
+    setIsPending(true);
+    setError(null);
+
+    try {
+      const result = await signup(formData);
+
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        alert("회원가입 성공! 이제 로그인해 주세요.");
+        if (onCancel) onCancel(); // 성공 시 모달 닫기
+      }
+    } catch (err) {
+      setError("회원가입 중 오류가 발생했습니다.");
+    } finally {
+      setIsPending(false);
     }
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 border rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold mb-6">아지트 회원가입</h1>
-      <form action={handleSubmit} className="flex flex-col gap-4">
-        <input
-          name="email"
-          type="email"
-          placeholder="이메일 (인증용)"
-          required
-          className="p-2 border rounded"
-        />
-        <input
-          name="userId"
-          type="text"
-          placeholder="아이디 (PC방 로그인용)"
-          required
-          className="p-2 border rounded"
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="비밀번호"
-          required
-          className="p-2 border rounded"
-        />
-        <input
-          name="name"
-          type="text"
-          placeholder="이름"
-          required
-          className="p-2 border rounded"
-        />
+    <div className={styles.container}>
+      {/* 우측 상단 닫기 버튼 */}
+      <button type="button" onClick={onCancel} className={styles.closeButton}>
+        ✕
+      </button>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+      <div className={styles.header}>
+        <h1 className={styles.title}>Join The Azit</h1>
+        <p className={styles.subtitle}>새로운 관리 시스템 계정을 생성합니다</p>
+      </div>
 
+      <form action={handleSubmit} className={styles.form}>
+        {/* 이메일 (전체 너비) */}
+        <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
+          <label className={styles.label}>Email Address</label>
+          <input
+            name="email"
+            type="email"
+            placeholder="example@azit.com"
+            required
+            className={styles.input}
+          />
+        </div>
+
+        {/* 아이디 & 이름 (반씩 차지) */}
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Admin ID</label>
+          <input
+            name="userId"
+            type="text"
+            placeholder="로그인 아이디"
+            required
+            className={styles.input}
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Full Name</label>
+          <input
+            name="name"
+            type="text"
+            placeholder="성함"
+            required
+            className={styles.input}
+          />
+        </div>
+
+        {/* 비밀번호 (전체 너비) */}
+        <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
+          <label className={styles.label}>Password</label>
+          <input
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            className={styles.input}
+          />
+        </div>
+
+        {/* 에러 메시지 */}
+        {error && <div className={styles.error}>{error}</div>}
+
+        {/* 가입 버튼 */}
         <button
           type="submit"
-          className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+          disabled={isPending}
+          className={styles.submitButton}
         >
-          가입하기
+          {isPending ? "REGISTERING..." : "CREATE ACCOUNT"}
         </button>
       </form>
     </div>

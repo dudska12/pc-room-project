@@ -9,6 +9,10 @@ import style from "./css/Panel.module.css";
 export default function Panel() {
   const [open, setOpen] = useState<null | "charge" | "food">(null);
 
+  const userData = {
+    remainingTime: 36000, // 예: 10시간 (초 단위)
+    lastCharge: 10000, // 마지막 충전 금액
+  };
   return (
     <div>
       <div className={style.Panel}>
@@ -23,7 +27,10 @@ export default function Panel() {
         </div>
 
         {/* 기존 컴포넌트들 */}
-        <TimeBox />
+        <TimeBox
+          initialRemainingTime={userData.remainingTime}
+          lastChargeAmount={userData.lastCharge}
+        />
 
         {/* 중간에 광고나 안내 문구 영역이 있으면 더 PC방 같습니다 */}
         <div
