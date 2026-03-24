@@ -1,36 +1,57 @@
 "use client";
 import { useState } from "react";
-import style from "./css/FoodModal.module.css"; // 기존 스타일 유지
-import { useTimeStore } from "@/store/useTimeStore"; // 시간 스토어 가져오기
+import style from "./css/FoodModal.module.css";
+import { useTimeStore } from "@/store/useTimeStore";
 import ConfirmModal from "./ConfirmModal";
+import { chargeTime } from "@/app/actions/time"; // 액션 경로 확인 필수!
+import { CHARGE_OPTIONS } from "@/app/Constants/chargeOptions";
+import { useUser } from "@/app/hooks/useUser";
 
 type Props = {
+  userId: string;
   onClose: () => void;
+  refreshUser: () => Promise<void>;
 };
 
-const chargeOptions = [
-  { time: "1시간", price: 1000, seconds: 3600 },
-  { time: "2시간", price: 2000, seconds: 7200 },
-  { time: "5시간", price: 3000, seconds: 18000 },
-  { time: "10시간", price: 5000, seconds: 36000 },
-  { time: "20시간", price: 10000, seconds: 72000 },
-  { time: "100시간", price: 30000, seconds: 360000 },
-];
+export default function ChargeModal({ userId, onClose, refreshUser }: Props) {
+  const { timeLeft, setTime } = useTimeStore();
 
-export default function ChargeModal({ onClose }: Props) {
-  const { timeLeft } = useTimeStore(); // 현재 남은 시간
-  const [selected, setSelected] = useState<(typeof chargeOptions)[0] | null>(
+  // ✅ 상태 타입을 상수의 한 요소 타입으로 지정해서 any 에러 방지
+  const [selected, setSelected] = useState<(typeof CHARGE_OPTIONS)[0] | null>(
     null,
   );
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false); // 3. 확인창 상태
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isPending, setIsPending] = useState(false);
 
-  // 최종 충전 승인 함수
-  const handleFinalCharge = () => {
-    if (selected) {
-      // addTime(selected.seconds); // 스토어에 시간 추가 로직 (있을 경우)
-      alert(`${selected.time} 충전이 완료되었습니다!`);
-      setIsConfirmOpen(false);
-      onClose(); // 충전 후 모달 닫기
+  const handleFinalCharge = async () => {
+    // selected가 없거나 seconds가 없을 경우를 대비한 방어 코드
+    if (!selected || isPending) return;
+
+    // 만약 constants에 seconds가 없다면 여기서 계산 (1시간 = 3600초)
+    // 숫자가 포함된 문자열(예: "5시간")에서 숫자만 추출하는 로직
+    const hourValue = parseInt(selected.time.replace(/[^0-9]/g, ""));
+    const secondsToAdd = hourValue * 3600;
+
+    setIsPending(true);
+
+    try {
+      const result = await chargeTime(userId, selected.price, secondsToAdd);
+
+      if (result.success) {
+        const newTotalTime = (timeLeft ?? 0) + secondsToAdd;
+        setTime(newTotalTime);
+
+        alert(`${selected.time} 충전이 완료되었습니다!`);
+        await refreshUser();
+        setIsConfirmOpen(false);
+        onClose();
+      } else {
+        alert(result.error || "충전 실패");
+      }
+    } catch (error) {
+      alert("서버 통신 오류");
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -40,27 +61,24 @@ export default function ChargeModal({ onClose }: Props) {
         className={style.modalContainer}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 우측 상단 닫기 버튼 */}
         <button onClick={onClose} className={style.absoluteCloseButton}>
           &times;
         </button>
 
-        {/* 1. 왼쪽 안내 바 (음식 모달의 카테고리 바 위치) */}
         <nav className={style.categoryBar}>
           <div className={style.logo}>CHARGE</div>
-          <div className={style.categoryBtn + " " + style.active}>
+          <div className={`${style.categoryBtn} ${style.active}`}>
             시간권 선택
           </div>
         </nav>
 
-        {/* 2. 중앙 요금제 그리드 */}
         <div className={style.menuSection}>
           <div className={style.modalHeader}>
             <h2 className={style.headerFont}>요금제 선택</h2>
           </div>
-
           <div className={style.grid}>
-            {chargeOptions.map((item, i) => (
+            {/* ✅ constants에서 가져온 CHARGE_OPTIONS 사용 */}
+            {CHARGE_OPTIONS.map((item, i) => (
               <div
                 key={i}
                 className={`${style.menuItem} ${selected?.time === item.time ? style.selectedCard : ""}`}
@@ -78,7 +96,6 @@ export default function ChargeModal({ onClose }: Props) {
           </div>
         </div>
 
-        {/* 3. 오른쪽 결제 확인창 (음식 모달의 장바구니 위치) */}
         <aside className={style.cartSection}>
           <div className={style.cartHeader}>결제 정보</div>
           <div className={style.cartList}>
@@ -88,15 +105,13 @@ export default function ChargeModal({ onClose }: Props) {
                   <span>선택 상품</span>
                   <strong>{selected.time}</strong>
                 </div>
-                <div className={style.summaryRow}>
-                  <span>현재 시간</span>
-                  <span>{Math.floor((timeLeft ?? 0) / 360) / 10}시간</span>
-                </div>
+                {/* 시간 계산 표시 로직 (초 데이터가 상수에 없을 경우 대비) */}
                 <div className={style.summaryRow}>
                   <span>충전 후 시간</span>
                   <span className={style.blueText}>
-                    {Math.floor(((timeLeft ?? 0) + selected.seconds) / 360) /
-                      10}
+                    {Math.floor(
+                      ((timeLeft ?? 0) + parseInt(selected.time) * 3600) / 3600,
+                    )}
                     시간
                   </span>
                 </div>
@@ -115,10 +130,10 @@ export default function ChargeModal({ onClose }: Props) {
             </div>
             <button
               className={style.orderBtn}
-              disabled={!selected}
+              disabled={!selected || isPending}
               onClick={() => setIsConfirmOpen(true)}
             >
-              충전하기
+              {isPending ? "처리 중..." : "충전하기"}
             </button>
           </div>
         </aside>

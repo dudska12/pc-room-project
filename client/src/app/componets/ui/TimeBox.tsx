@@ -1,37 +1,59 @@
 "use client";
 
 import { useTimeStore } from "@/store/useTimeStore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { syncUserTime } from "@/app/actions/time";
+import { useRouter } from "next/navigation";
 import style from "./css/TimeBox.module.css";
 
 interface TimeBoxProps {
-  initialRemainingTime: number; // DB의 보유 시간 (초 단위)
-  lastChargeAmount: number; // 마지막 충전 금액 (예: 10000)
+  userId: string; // ✅ DB 업데이트를 위해 유저 ID 추가
+  initialRemainingTime: number;
+  lastChargeAmount: number;
 }
 
 export default function TimeBox({
+  userId,
   initialRemainingTime,
   lastChargeAmount,
 }: TimeBoxProps) {
   const { timeLeft, decreaseTime, setTime } = useTimeStore();
-
-  // ✅ 사용시간 (로그인 후 흐른 시간 - 초 단위로 관리)
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const router = useRouter();
+
+  // ✅ 동기화 주기를 관리하기 위한 Ref (화면 리렌더링과 상관없이 값 유지)
+  const syncCounter = useRef(0);
 
   useEffect(() => {
-    // 1. 초기 보유 시간 세팅
     setTime(initialRemainingTime);
 
-    // 2. 1초마다 타이머 작동
     const timer = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1); // 사용시간은 증가
-      decreaseTime(); // 남은시간은 감소
+      setElapsedSeconds((prev) => prev + 1);
+      decreaseTime();
+
+      // ✅ 60초마다 DB에 현재 남은 시간 저장 (새로고침/팅김 방지)
+      syncCounter.current += 1;
+      if (syncCounter.current >= 60) {
+        if (timeLeft !== null) syncUserTime(userId, timeLeft);
+        syncCounter.current = 0;
+      }
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [initialRemainingTime, setTime, decreaseTime]);
+    return () => {
+      // ✅ 컴포넌트 언마운트(종료) 시 마지막 시간 저장
+      if (timeLeft !== null) syncUserTime(userId, timeLeft);
+      clearInterval(timer);
+    };
+  }, [initialRemainingTime, setTime, decreaseTime, userId, timeLeft]);
 
-  // ✅ 초 단위를 버리고 "시간:분"으로 포맷팅하는 함수
+  // ✅ 시간이 0이 되면 강제 종료 로직
+  useEffect(() => {
+    if (timeLeft !== null && timeLeft <= 0) {
+      alert("잔여 시간이 없습니다. 시스템을 종료합니다.");
+      router.push("/login"); // 로그인 화면으로 튕기기
+    }
+  }, [timeLeft, router]);
+
   const formatToMin = (totalSeconds: number) => {
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
@@ -40,23 +62,20 @@ export default function TimeBox({
 
   return (
     <div className={style.infoContainer}>
-      {/* 1. 사용시간 (00:00부터 올라감) */}
       <div className={style.row}>
         <span>사용시간</span>
         <span className={style.value}>{formatToMin(elapsedSeconds)}</span>
       </div>
 
-      {/* 2. 남은시간 (보유 시간에서 내려감) */}
       <div className={style.row}>
         <span className={style.blueText}>남은시간</span>
         <span className={style.blueValue}>{formatToMin(timeLeft ?? 0)}</span>
       </div>
 
-      {/* 3. 요금영역 (가장 최근 충전 금액 고정) */}
       <div className={style.row}>
         <span>선불요금</span>
         <span className={style.value}>
-          {lastChargeAmount.toLocaleString()}원
+          {(lastChargeAmount || 0).toLocaleString()}원
         </span>
       </div>
     </div>

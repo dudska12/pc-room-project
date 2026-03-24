@@ -56,6 +56,15 @@ export async function login(
       };
     }
 
+    // 🔥 [추가] 여기서 쿠키를 굽습니다!
+    // API Route에서 이 이름을 똑같이 사용할 겁니다.
+    cookieStore.set("userId", userProfile.id, {
+      path: "/",
+      httpOnly: true, // 보안을 위해 설정
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1주일 유지
+    });
+
     // ✅ 성공 시 리다이렉트 경로 설정
     redirectTo = "/";
   } catch (error) {

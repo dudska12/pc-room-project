@@ -4,19 +4,21 @@ import TimeBox from "./TimeBox";
 import MenuButtons from "./MenuButtons";
 import FoodModal from "./FoodModal";
 import ChargeModal from "./ChargeModal";
+import TimeGuard from "./TimeGuard"; // ✅ 가드 컴포넌트 임포트
 import style from "./css/Panel.module.css";
+import { useUser } from "@/app/hooks/useUser";
 
 export default function Panel() {
   const [open, setOpen] = useState<null | "charge" | "food">(null);
+  const { userData, loading, refreshUser, error } = useUser();
 
-  const userData = {
-    remainingTime: 36000, // 예: 10시간 (초 단위)
-    lastCharge: 10000, // 마지막 충전 금액
-  };
+  if (loading) return <div>데이터 로딩 중...</div>;
+  if (error || !userData) return <div>시스템 연동 오류</div>;
+
   return (
-    <div>
+    // ✅ 전체를 TimeGuard로 감쌉니다.
+    <TimeGuard userData={userData} refreshUser={refreshUser}>
       <div className={style.Panel}>
-        {/* 상단 런처 헤더 부분 추가 */}
         <div className={style.topBar}>
           <span
             style={{ fontSize: "12px", color: "#00d2ff", fontWeight: "bold" }}
@@ -26,30 +28,26 @@ export default function Panel() {
           <button className={style.topButton}>사용종료</button>
         </div>
 
-        {/* 기존 컴포넌트들 */}
         <TimeBox
+          userId={userData.id}
           initialRemainingTime={userData.remainingTime}
-          lastChargeAmount={userData.lastCharge}
+          lastChargeAmount={userData.lastCharge || 0}
         />
 
-        {/* 중간에 광고나 안내 문구 영역이 있으면 더 PC방 같습니다 */}
-        <div
-          style={{
-            flex: 1,
-            background: "rgba(0,0,0,0.2)",
-            borderRadius: "8px",
-            padding: "10px",
-            fontSize: "13px",
-          }}
-        >
-          이벤트: 신규 메뉴 '치즈라볶이' 출시!
-        </div>
+        <div className={style.adArea}>이벤트: 신규 메뉴 '치즈라볶이' 출시!</div>
 
         <MenuButtons onOpen={setOpen} />
       </div>
 
-      {open === "charge" && <ChargeModal onClose={() => setOpen(null)} />}
+      {/* 일반적인 상황에서 버튼 눌러서 여는 모달들 */}
+      {open === "charge" && (
+        <ChargeModal
+          userId={userData.id}
+          onClose={() => setOpen(null)}
+          refreshUser={refreshUser}
+        />
+      )}
       {open === "food" && <FoodModal onClose={() => setOpen(null)} />}
-    </div>
+    </TimeGuard>
   );
 }
