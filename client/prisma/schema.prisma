@@ -8,26 +8,27 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
 
 // 1. 사용자 (User) - 회원 정보 및 잔여 시간 관리
 model User {
-  id            String   @id @default(uuid())
-  userId        String   @unique // 로그인 아이디
+  id            String @id @default(uuid())
+  userId        String @unique
   password      String
   name          String
-  phone         String? // 연락처 (선택)
-  remainingTime Int      @default(0) // 남은 시간 (분 단위)
-  point         Int      @default(0) // 보유 포인트
-  role          Role     @default(USER) // USER 또는 ADMIN
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  remainingTime Int    @default(0)
+  point         Int    @default(0)
+  role          Role   @default(USER)
 
-  // 관계 설정
-  logs   UsageLog[]
-  orders Order[]
+  // [추가] 현재 사용 중인 좌석과의 관계 (1:1)
+  currentSeat Seat? @relation("UserCurrentSeat")
+
+  logs      UsageLog[]
+  orders    Order[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 enum Role {
@@ -37,13 +38,21 @@ enum Role {
 
 // 2. 좌석 (Seat) - 실시간 PC 상태 및 사용 정보
 model Seat {
-  id            Int        @id @default(autoincrement())
-  seatNumber    Int        @unique
-  status        SeatStatus @default(AVAILABLE)
-  currentUserId String? // 현재 사용 중인 유저 ID (필요 시 관계 설정 가능)
-  startTime     DateTime? // 사용 시작 시각
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id         Int        @id @default(autoincrement())
+  seatNumber Int        @unique
+  status     SeatStatus @default(AVAILABLE)
+
+  // [수정] String 대신 User 모델과 직접 연결
+  user          User?   @relation("UserCurrentSeat", fields: [currentUserId], references: [id])
+  currentUserId String? @unique // 한 유저는 한 자리만 점유 가능
+
+  // [추가] 실시간 동기화를 위한 체크 포인트
+  // 강제 종료 로직 시, (현재 시간 - lastHeartbeat)만큼 시간을 차감하기 위함
+  lastHeartbeat DateTime?
+
+  startTime DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 enum SeatStatus {
@@ -111,5 +120,11 @@ model UsageLog {
   seatNumber Int
   startTime  DateTime  @default(now())
   endTime    DateTime?
-  usedTime   Int? // 실제 사용한 시간(분)
+  usedTime   Int?
+  status     LogStatus @default(NORMAL) // NORMAL, FORCED_EXIT (강제종료)
+}
+
+enum LogStatus {
+  NORMAL
+  FORCED_EXIT
 }

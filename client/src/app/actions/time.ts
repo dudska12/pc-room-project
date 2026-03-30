@@ -3,20 +3,36 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-// 1. 주기적 시간 업데이트 (차감 저장)
-export async function syncUserTime(userId: string, remainingTime: number) {
+// 1. 주기적 시간 업데이트 (보안 강화 버전)
+export async function syncUserTime(userId: string) {
+  console.log("🔔 [서버] 시간 차감 요청 수신됨:", new Date().toLocaleTimeString()); // 이거 찍히나 보세요
   try {
-    await prisma.user.update({
+    // 사용자가 준 숫자를 믿지 않고, DB에서 직접 60초(1분)를 차감함
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { remainingTime: Math.max(0, remainingTime) },
+      data: {
+        remainingTime: {
+          decrement: 60, // 서버가 직접 60초 차감 (가장 안전)
+        },
+      },
     });
-    return { success: true };
+
+    // 0초 이하로 내려가지 않게 방어 로직 (필요 시)
+    if (updatedUser.remainingTime < 0) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { remainingTime: 0 },
+      });
+    }
+
+    return { success: true, remainingTime: updatedUser.remainingTime };
   } catch (error) {
+    console.error("Sync Error:", error);
     return { error: "시간 동기화 실패" };
   }
 }
 
-// 2. 요금제 충전 로직
+// 2. 요금제 충전 로직 (유지 및 보완)
 export async function chargeTime(
   userId: string,
   amount: number,
@@ -26,14 +42,12 @@ export async function chargeTime(
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        remainingTime: { increment: secondsToAdd }, // 시간 추가
-        point: { increment: Math.floor(amount * 0.1) }, // 10% 포인트 적립 (옵션)
-        // lastChargeAmount 필드가 있다면 업데이트
-        // lastCharge: amount
+        remainingTime: { increment: secondsToAdd },
+        point: { increment: Math.floor(amount * 0.1) }, // 10% 적립
       },
     });
 
-    revalidatePath("/"); // 대시보드 데이터 갱신
+    //revalidatePath("/");
     return { success: true, newTime: updatedUser.remainingTime };
   } catch (error) {
     return { error: "충전 처리 실패" };

@@ -1,5 +1,6 @@
-// src/app/componets/ui/TimeGuard.tsx
+// src/app/componets/ui/LockoutGuard.tsx
 "use client";
+import { useLockout } from "@/app/hooks/useLockout";
 import ChargeModal from "./ChargeModal";
 
 interface Props {
@@ -9,25 +10,25 @@ interface Props {
 }
 
 export default function TimeGuard({ userData, children, refreshUser }: Props) {
-  // ✅ 시간이 0 이하인 경우 메인 UI 대신 충전 모달만 렌더링
-  if (userData && userData.remainingTime <= 0) {
+  const { timeLeft, isLocked } = useLockout(
+    userData.remainingTime,
+    userData.id,
+  );
+
+  // 1. 아직 시간이 설정되지 않은 경우 (null) 로딩 표시
+  if (timeLeft === null) return <div>시간 데이터 확인 중...</div>;
+
+  // 2. 시간이 0이거나 잠금 상태인 경우
+  if (isLocked || timeLeft <= 0) {
     return (
-      <div
-        style={{
-          width: "100%",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "rgba(0,0,0,0.8)",
-        }}
-      >
-        <div style={{ textAlign: "center", color: "white" }}>
-          <h2 style={{ marginBottom: "20px" }}>잔여 시간이 없습니다.</h2>
-          <p style={{ marginBottom: "30px" }}>
-            서비스 이용을 위해 시간을 충전해주세요.
+      <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center">
+        <div className="text-center text-white p-8 bg-gray-900 border-2 border-red-600 rounded-2xl shadow-2xl">
+          <h2 className="text-4xl font-black mb-4 text-red-600 uppercase">
+            Time Out
+          </h2>
+          <p className="text-xl text-gray-400 mb-8">
+            잔여 시간이 없습니다. 충전 후 이용해 주세요.
           </p>
-          {/* onClose를 막거나 안내 메시지를 띄우는 처리를 추가할 수 있습니다. */}
           <ChargeModal
             userId={userData.id}
             onClose={() => alert("충전 후 이용 가능합니다.")}
@@ -38,6 +39,5 @@ export default function TimeGuard({ userData, children, refreshUser }: Props) {
     );
   }
 
-  // ✅ 시간이 있는 경우에만 원래 보여주려던 화면(children)을 보여줌
   return <>{children}</>;
 }
