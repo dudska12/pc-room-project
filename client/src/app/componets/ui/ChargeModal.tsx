@@ -38,12 +38,10 @@ export default function ChargeModal({ userId, onClose, refreshUser }: Props) {
       const result = await chargeTime(userId, selected.price, secondsToAdd);
 
       if (result.success) {
-        const newTotalTime = (timeLeft ?? 0) + secondsToAdd;
-        setTime(newTotalTime);
+        setTime(result.newTime);
 
         alert(`${selected.time} 충전이 완료되었습니다!`);
         await refreshUser();
-        setIsConfirmOpen(false);
         onClose();
       } else {
         alert(result.error || "충전 실패");

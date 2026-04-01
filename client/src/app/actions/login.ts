@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 // 반환 타입 정의 (타입 에러 방지용)
 export type LoginResponse = {
@@ -64,6 +65,7 @@ export async function login(
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 1주일 유지
     });
+    revalidatePath("/", "layout");
 
     // ✅ 성공 시 리다이렉트 경로 설정
     redirectTo = "/";

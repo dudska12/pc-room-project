@@ -5,8 +5,10 @@ type TimeState = {
   timeLeft: number | null;
   lastSavedTime: number | null;
   isSyncing: boolean;
+  // 초기화 및 시간 설정
   setTime: (time: number) => void;
-  // 1초마다 실행될 함수
+  // 로그아웃 시 스토어 완전 초기화
+  reset: () => void;
   tick: (userId: string) => void;
 };
 
@@ -15,26 +17,41 @@ export const useTimeStore = create<TimeState>((set, get) => ({
   lastSavedTime: null,
   isSyncing: false,
 
-  setTime: (time) => set({ timeLeft: time, lastSavedTime: time }),
+  // ✅ 새로운 유저가 들어올 때 모든 상태를 동기화
+  setTime: (time) =>
+    set({
+      timeLeft: time,
+      lastSavedTime: time,
+      isSyncing: false,
+    }),
+
+  // ✅ 로그아웃 시 호출할 초기화 함수
+  reset: () =>
+    set({
+      timeLeft: null,
+      lastSavedTime: null,
+      isSyncing: false,
+    }),
 
   tick: async (userId) => {
-    const { timeLeft, lastSavedTime, isSyncing } = get();
-    if (timeLeft === null || timeLeft <= 0) return;
+    const state = get();
+    // timeLeft가 null이거나 0이면 동작하지 않음
+    if (state.timeLeft === null || state.timeLeft <= 0) return;
 
-    const nextTime = timeLeft - 1;
+    const nextTime = state.timeLeft - 1;
     set({ timeLeft: nextTime });
 
-    // 🛡️ 정확히 60초가 차이 날 때만 서버 동기화 (1초마다 POST 방지)
+    // 🛡️ 서버 동기화 로직 (기존 유지)
     if (
-      lastSavedTime !== null &&
-      lastSavedTime - nextTime >= 60 &&
-      !isSyncing
+      state.lastSavedTime !== null &&
+      state.lastSavedTime - nextTime >= 60 &&
+      !state.isSyncing
     ) {
       set({ isSyncing: true });
       try {
-        await syncUserTime(userId); // 서버 액션 호출
-        set({ lastSavedTime: nextTime }); // 기준점 갱신
-        console.log("🚀 [서버 동기화 완료] -60s");
+        await syncUserTime(userId);
+        set({ lastSavedTime: nextTime });
+        console.log("🚀 [서버 동기화 완료] 유저:", userId);
       } catch (error) {
         console.error("동기화 실패:", error);
       } finally {
@@ -42,8 +59,9 @@ export const useTimeStore = create<TimeState>((set, get) => ({
       }
     }
 
-    // 시간이 다 되면 새로고침 등 처리
+    // 시간이 다 됐을 때 처리
     if (nextTime <= 0) {
+      // ⚠️ 강제 새로고침은 유저 경험에 좋지 않을 수 있으니 나중에 UI 차단으로 대체 권장
       window.location.reload();
     }
   },

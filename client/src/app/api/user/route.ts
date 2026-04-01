@@ -6,8 +6,11 @@ import { cookies } from "next/headers"; // ✅ 쿠키를 가져오기 위해 추
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    // ✅ 로그인 시 저장했던 쿠키 이름을 넣으세요 (예: "session", "userId" 등)
     const sessionCookie = cookieStore.get("userId");
+
+    console.log("-----------------------------------------");
+    console.log("현재 API 요청을 보낸 쿠키 ID:", sessionCookie?.value);
+    console.log("-----------------------------------------");
 
     if (!sessionCookie || !sessionCookie.value) {
       return NextResponse.json(
@@ -16,12 +19,9 @@ export async function GET() {
       );
     }
 
-    // 쿠키에 저장된 ID로 실제 DB 유저 조회
     const user = await prisma.user.findUnique({
       where: {
-        // DB의 primary key인 id(UUID)를 쿠키에 저장했다면 id로,
-        // 로그인용 아이디를 저장했다면 userId로 조회하세요.
-        id: sessionCookie.value,
+        id: sessionCookie.value, // 쿠키에 저장된 UUID로 조회
       },
     });
 
@@ -32,7 +32,10 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(user);
+    // 🛡️ 보안: 비밀번호 등 민감한 정보는 클라이언트에 보내지 않음
+    const { password, ...safeUser } = user;
+
+    return NextResponse.json(safeUser);
   } catch (error) {
     console.error("API GET Error:", error);
     return NextResponse.json({ error: "DB 연동 실패" }, { status: 500 });

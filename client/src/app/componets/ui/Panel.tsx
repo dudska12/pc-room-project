@@ -4,7 +4,7 @@ import TimeBox from "./TimeBox";
 import MenuButtons from "./MenuButtons";
 import FoodModal from "./FoodModal";
 import ChargeModal from "./ChargeModal";
-import TimeGuard from "./LockoutGuard";
+import TimeGuard from "./TimeGuard";
 import style from "./css/Panel.module.css";
 import { useUser } from "@/app/hooks/useUser";
 import { useShutdown } from "@/app/hooks/useShutdown";
