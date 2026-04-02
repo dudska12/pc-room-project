@@ -9,7 +9,7 @@ import style from "./css/Panel.module.css";
 import { useUser } from "@/app/hooks/useUser";
 import { useShutdown } from "@/app/hooks/useShutdown";
 
-export default function Panel() {
+export default function Panel({ user }: { user: any }) {
   const [open, setOpen] = useState<null | "charge" | "food">(null);
   const { userData, loading, refreshUser, error } = useUser();
   const { shutdown } = useShutdown(userData);
@@ -47,7 +47,7 @@ export default function Panel() {
           refreshUser={refreshUser}
         />
       )}
-      {open === "food" && <FoodModal onClose={() => setOpen(null)} />}
+      {open === "food" && <FoodModal user={user} onClose={() => setOpen(null)} />}
     </TimeGuard>
   );
 }

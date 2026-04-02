@@ -42,7 +42,7 @@ export default async function Home() {
           "use server"; /* 갱신 로직 */
         }}
       >
-        <LayoutPanel />
+        <LayoutPanel user={user} />
       </TimeGuard>
     </main>
   );
