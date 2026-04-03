@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useLockout } from "@/app/hooks/useLockout";
-import { useTimeStore } from "@/store/useTimeStore"; // ✅ Zustand 스토어 필수
+import { useTimeStore } from "@/store/useTimeStore";
 import ChargeModal from "./ChargeModal";
-import style from "./css/FoodModal.module.css";
+import style from "./css/TimeGuard.module.css"; // 기존 CSS 파일 경로 확인
 
 interface Props {
   userData: any;
@@ -12,18 +12,17 @@ interface Props {
 }
 
 export default function TimeGuard({ userData, children, refreshUser }: Props) {
-  // 1. Zustand의 setTime 함수를 가져옵니다 (숫자판 덮어쓰기용)
   const setTime = useTimeStore((state) => state.setTime);
 
-  // 2. 훅을 통해 현재 실시간 남은 시간을 계산합니다.
+  const announced = useRef<{ [key: number]: boolean }>({});
+
+  // 1. 타이머 훅 (서버 시간 차감 핵심 로직)
   const { timeLeft, isLocked } = useLockout(
     userData.remainingTime,
     userData.id,
   );
 
-  // ⭐ [데이터 꼬임 방지 핵심 코드] ⭐
-  // 유저가 바뀌어서 들어오면(ID가 달라지면),
-  // Zustand 메모리에 남은 이전 유저의 시간을 서버 데이터(0초 또는 1시간 등)로 강제 교체합니다.
+  // 유저 변경 시 시간 동기화
   useEffect(() => {
     if (userData) {
       console.log(
@@ -31,37 +30,56 @@ export default function TimeGuard({ userData, children, refreshUser }: Props) {
       );
       setTime(userData.remainingTime);
     }
-  }, [userData.id, setTime]); // 👈 ID가 바뀔 때만 작동해서 효율적입니다.
+  }, [userData.id, setTime, userData.remainingTime]);
 
-  // 데이터 로딩 중일 때 (null 방어)
-  if (timeLeft === null) {
+  // ⭐ 실시간 음성 알림 로직
+  useEffect(() => {
+    if (timeLeft === null) return;
+
+    const speak = (text: string) => {
+      // 브라우저 내장 음성 합성 API (별도 설치 필요 없음)
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = "ko-KR"; // 한국어 설정
+      window.speechSynthesis.speak(msg);
+    };
+
+    // 10분(600초) 남았을 때 (정확히 600초가 아닐 수 있으므로 범위를 줍니다)
+    if (timeLeft <= 600 && timeLeft > 590 && !announced.current[600]) {
+      speak("사용 시간이 10분 남았습니다.");
+      announced.current[600] = true;
+    }
+
+    // 5분(300초) 남았을 때
+    if (timeLeft <= 300 && timeLeft > 290 && !announced.current[300]) {
+      speak("사용 시간이 5분 남았습니다. 미리 충전해 주세요.");
+      announced.current[300] = true;
+    }
+
+    // 유저가 충전을 해서 시간이 다시 늘어나면 체크 변수 초기화
+    if (timeLeft > 600) {
+      announced.current = {};
+    }
+  }, [timeLeft]);
+
+  // 2. 데이터 로딩 중 (기존 .loadingContainer 클래스 사용)
+  if (timeLeft === null && !userData) {
     return (
-      <div style={{ color: "#fff", padding: "20px", textAlign: "center" }}>
+      <div className={style.loadingContainer}>
         사용자 데이터를 확인 중입니다...
       </div>
     );
   }
 
-  // 3. 시간이 없거나 잠긴 경우 (차단 화면)
-  if (isLocked || timeLeft <= 0) {
+  // 3. 시간이 없거나 잠긴 경우 (기존 .lockoutOverlay 클래스 등 사용)
+  if (isLocked || (timeLeft !== null && timeLeft <= 0)) {
     return (
-      <div
-        className={style.confirmOverlay}
-        style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
-      >
-        <div
-          className={style.confirmBox}
-          style={{ textAlign: "center", border: "2px solid #ff4d4d" }}
-        >
-          <div className={style.confirmHeader}>
-            <h2
-              style={{ color: "#ff4d4d", fontSize: "2rem", margin: "10px 0" }}
-            >
-              TIME OUT
-            </h2>
+      <div className={style.lockoutOverlay}>
+        <div className={style.lockoutBox}>
+          <div className={style.lockoutHeader}>
+            <h2 className={style.lockoutTitle}>TIME OUT</h2>
           </div>
-          <div className={style.confirmContent}>
-            <p style={{ color: "#ccc", marginBottom: "20px" }}>
+          <div className={style.lockoutContent}>
+            <p className={style.lockoutMessage}>
               잔여 시간이 없습니다. 충전 후 이용해 주세요.
             </p>
             <ChargeModal
@@ -75,6 +93,6 @@ export default function TimeGuard({ userData, children, refreshUser }: Props) {
     );
   }
 
-  // 4. 시간이 남아있으면 정상적으로 화면을 보여줌
+  // 4. 정상 상태일 때는 아무런 레이아웃 방해 없이 children만 반환
   return <>{children}</>;
 }

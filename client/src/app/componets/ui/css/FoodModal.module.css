@@ -153,10 +153,10 @@
 /* --- 장바구니 우측 하단 고정 --- */
 .cartSection {
   position: absolute; /* 부모인 modalContainer 기준으로 배치 */
-  right: 20px;
+  right: 9px;
   bottom: 20px;
   width: 300px;
-  height: 400px; /* 적당한 높이 설정 */
+  height: 500px; /* 적당한 높이 설정 */
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -684,6 +684,7 @@
   font-weight: bold;
   min-width: 40px;
   text-align: center;
+  color: #000000;
 }
 
 .outOfStock {
@@ -691,4 +692,9 @@
   font-weight: bold;
   min-width: 40px;
   text-align: center;
+}
+
+.BlackFont {
+  color: #000000;
+  font-weight: bold;
 }

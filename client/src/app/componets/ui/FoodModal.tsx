@@ -286,7 +286,7 @@ export default function FoodModal({
           </div>
           <div className={style.cartFooter}>
             <div className={style.totalRow}>
-              <span>총 금액</span>
+              <span className={style.BlackFont}>총 금액</span>
               <span className={style.totalPrice}>
                 {totalAmount.toLocaleString()}원
               </span>
