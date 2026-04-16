@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 let orders: any[] = [];
 
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

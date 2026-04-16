@@ -23,7 +23,7 @@ export default function SignupPage({ onCancel }: SignupPageProps) {
         setError(result.error);
       } else {
         // alert("회원가입 성공! 이제 로그인해 주세요.");
-        window.location.reload();
+        // window.location.reload();
         if (onCancel) onCancel(); // 성공 시 모달 닫기
       }
     } catch (err) {
@@ -48,7 +48,7 @@ export default function SignupPage({ onCancel }: SignupPageProps) {
       <form action={handleSubmit} className={styles.form}>
         {/* 이메일 (전체 너비) */}
         <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-          <label className={styles.label}>Email Address</label>
+          <label className={styles.label}>이메일</label>
           <input
             name="email"
             type="email"
@@ -60,7 +60,7 @@ export default function SignupPage({ onCancel }: SignupPageProps) {
 
         {/* 아이디 & 이름 (반씩 차지) */}
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Admin ID</label>
+          <label className={styles.label}>닉네임</label>
           <input
             name="userId"
             type="text"
@@ -71,7 +71,7 @@ export default function SignupPage({ onCancel }: SignupPageProps) {
         </div>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Full Name</label>
+          <label className={styles.label}>이름</label>
           <input
             name="name"
             type="text"
@@ -83,7 +83,7 @@ export default function SignupPage({ onCancel }: SignupPageProps) {
 
         {/* 비밀번호 (전체 너비) */}
         <div className={`${styles.inputGroup} ${styles.fullWidth}`}>
-          <label className={styles.label}>Password</label>
+          <label className={styles.label}>비밀번호</label>
           <input
             name="password"
             type="password"

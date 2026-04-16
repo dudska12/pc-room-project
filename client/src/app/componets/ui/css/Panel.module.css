@@ -1,11 +1,16 @@
+:global(.panel-container) {
+  pointer-events: auto !important;
+}
+
 .Panel {
-  width: 380px; /* 조금 더 넓게 */
-  height: 560px; /* 부모 높이에 맞춤 */
-  background: linear-gradient(
-    145deg,
-    #2c3e50,
-    #1a252f
-  ); /* 그라데이션으로 입체감 */
+  /* 💡 중요: 위치와 레이어 순서 명시 */
+  position: relative;
+  z-index: 1;
+  pointer-events: auto !important;
+
+  width: 380px;
+  height: 560px;
+  background: linear-gradient(145deg, #2c3e50, #1a252f);
   border-radius: 12px;
   padding: 20px;
   color: white;

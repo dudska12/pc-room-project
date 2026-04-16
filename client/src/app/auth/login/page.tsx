@@ -6,21 +6,24 @@ import SignupPage from "@/app/signup/page";
 import Image from "next/image"; // Next.js 이미지 컴포넌트 사용 추천
 import styles from "./login.module.css";
 import { getDutyScheduleData, getMonthScheduleData } from "@/utils/duty";
+import { useMouseIgnore } from "@/app/hooks/useMouseIgnore";
+import imagelogo from "@/images/backgroundPcImage.jpg";
 
 export default function LoginPage() {
+  useMouseIgnore(); // 2. 실행
   const [state, formAction, isPending] = useActionState(login, null);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const dutySchedule = getDutyScheduleData(4);
   const { year, month, schedule } = getMonthScheduleData(); // 한 달 데이터
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} panel-container`}>
       <div className={styles.container}>
         {/* ====== 왼쪽: 이미지 영역 ====== */}
         <div className={styles.leftSection}>
           {/* ✅ 남영님이 원하는 사진을 여기에 넣으세요! */}
           <Image
-            src="/images/azit-branding.jpg" // 이미지 경로
+            src={imagelogo}
             alt="Azit PC Branding"
             fill // 부모 컨테이너에 맞춤
             priority // 우선 로딩
@@ -29,9 +32,9 @@ export default function LoginPage() {
 
           <div className={styles.brandingText}>
             <p className="text-white text-sm font-bold">WELCOME TO</p>
-            <h1 className={styles.title}>AZIT CYBER</h1>
+            <h1 className={styles.title}>사무실 프로그램</h1>
             <p className="text-slate-400 text-xs">
-              한 번의 터치로 편리한 PC방 관리를 시작하십시오.
+              2026년 3월 18일 ~ 2027년 3월 18일의 여정
             </p>
           </div>
         </div>

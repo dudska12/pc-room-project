@@ -5,7 +5,6 @@ import { useTimeStore } from "@/store/useTimeStore";
 import ConfirmModal from "./ConfirmModal";
 import { chargeTime } from "@/app/actions/time"; // 액션 경로 확인 필수!
 import { CHARGE_OPTIONS } from "@/app/Constants/chargeOptions";
-import { useUser } from "@/app/hooks/useUser";
 
 type Props = {
   userId: string;

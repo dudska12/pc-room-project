@@ -8,8 +8,10 @@ import TimeGuard from "./TimeGuard";
 import style from "./css/Panel.module.css";
 import { useUser } from "@/app/hooks/useUser";
 import { useShutdown } from "@/app/hooks/useShutdown";
+import { useMouseIgnore } from "@/app/hooks/useMouseIgnore";
 
 export default function Panel({ user }: { user: any }) {
+  useMouseIgnore(); // 2. 실행
   const [open, setOpen] = useState<null | "charge" | "food">(null);
   const { userData, loading, refreshUser, error } = useUser();
   const { shutdown } = useShutdown(userData);
@@ -20,7 +22,7 @@ export default function Panel({ user }: { user: any }) {
   return (
     // ✅ 전체를 TimeGuard로 감쌉니다.
     <TimeGuard userData={userData} refreshUser={refreshUser}>
-      <div className={style.Panel}>
+      <div className={`${style.Panel} panel-container`}>
         <div className={style.topBar}>
           <span
             style={{ fontSize: "12px", color: "#00d2ff", fontWeight: "bold" }}
@@ -40,14 +42,20 @@ export default function Panel({ user }: { user: any }) {
       </div>
 
       {/* 일반적인 상황에서 버튼 눌러서 여는 모달들 */}
-      {open === "charge" && (
-        <ChargeModal
-          userId={userData.id}
-          onClose={() => setOpen(null)}
-          refreshUser={refreshUser}
-        />
+      {(open === "charge" || open === "food") && (
+        <div className="panel-container">
+          {open === "charge" && (
+            <ChargeModal
+              userId={userData.id}
+              onClose={() => setOpen(null)}
+              refreshUser={refreshUser}
+            />
+          )}
+          {open === "food" && (
+            <FoodModal user={user} onClose={() => setOpen(null)} />
+          )}
+        </div>
       )}
-      {open === "food" && <FoodModal user={user} onClose={() => setOpen(null)} />}
     </TimeGuard>
   );
 }
