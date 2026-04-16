@@ -78,7 +78,7 @@ export default function FoodModal({
     });
 
     if (result.success) {
-      alert("주문이 완료되었습니다!");
+      // alert("주문이 완료되었습니다!");
       setCart([]);
       setIsConfirmOpen(false);
       refresh(); // 만약 상품 재고를 즉시 갱신하고 싶다면 useProducts의 refresh 호출

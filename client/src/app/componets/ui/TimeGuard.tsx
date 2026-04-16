@@ -84,7 +84,7 @@ export default function TimeGuard({ userData, children, refreshUser }: Props) {
             </p>
             <ChargeModal
               userId={userData.id}
-              onClose={() => alert("충전 후 이용 가능합니다.")}
+              onClose={() => {}}
               refreshUser={refreshUser}
             />
           </div>

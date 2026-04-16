@@ -22,7 +22,7 @@ export default function SignupPage({ onCancel }: SignupPageProps) {
       if (result?.error) {
         setError(result.error);
       } else {
-        alert("회원가입 성공! 이제 로그인해 주세요.");
+        // alert("회원가입 성공! 이제 로그인해 주세요.");
         window.location.reload();
         if (onCancel) onCancel(); // 성공 시 모달 닫기
       }

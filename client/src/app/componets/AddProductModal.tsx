@@ -26,14 +26,14 @@ export default function AddProductModal({
 
       const res = await addProduct(formData);
       if (res.success) {
-        alert("상품이 등록되었습니다!");
+        // alert("상품이 등록되었습니다!");
         onClose(); // 성공 시 모달 닫기
       } else {
-        alert(res.error || "등록에 실패했습니다.");
+        // alert(res.error || "등록에 실패했습니다.");
       }
     } catch (error) {
       console.error("상품 등록 실패:", error);
-      alert("오류가 발생했습니다.");
+      // alert("오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }

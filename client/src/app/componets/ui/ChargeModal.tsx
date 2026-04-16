@@ -40,14 +40,14 @@ export default function ChargeModal({ userId, onClose, refreshUser }: Props) {
       if (result.success) {
         setTime(result.newTime);
 
-        alert(`${selected.time} 충전이 완료되었습니다!`);
+        // alert(`${selected.time} 충전이 완료되었습니다!`);
         await refreshUser();
         onClose();
       } else {
-        alert(result.error || "충전 실패");
+        // alert(result.error || "충전 실패");
       }
     } catch (error) {
-      alert("서버 통신 오류");
+      // alert("서버 통신 오류");
     } finally {
       setIsPending(false);
     }
